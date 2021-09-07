@@ -1,0 +1,63 @@
+---
+title: 'Homework #1'
+author: "Sie Siong Wong"
+date: "9/6/2021"
+output: html_document
+---
+
+# Load R Packages
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+
+```
+
+# Load the Data
+
+```{r}
+
+training <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/main/HW1/moneyball-training-data.csv", header=TRUE, sep=",")
+
+evaluation <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/main/HW1/moneyball-evaluation-data.csv", header=TRUE, sep=",")
+
+```
+
+# Introduction
+
+
+
+# Data Exploration
+
+```{r}
+
+summary(training %>% subset(select=-INDEX))
+
+```
+
+
+```{r}
+
+# Gather all variables and values for density plot 
+training <- training %>% gather(variable, value, TARGET_WINS:TEAM_FIELDING_DP) %>% select(-INDEX) 
+
+# Density plot for all variables
+training %>%
+  ggplot(., aes(value)) + 
+  geom_density(fill = "#69b3a2", color="#e9ecef", alpha=0.8) + 
+  facet_wrap(~variable, scales ="free", ncol = 4) +
+  labs(x = element_blank(), y = element_blank())
+
+```
+
+
+# Data Preparation
+
+
+# Build Models
+
+
+# Select Models
