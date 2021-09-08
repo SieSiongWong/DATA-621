@@ -1,6 +1,6 @@
 ---
 title: 'Homework #1'
-author: "Sie Siong Wong"
+author: "Critical Thinking Group #2"
 date: "9/6/2021"
 output: html_document
 ---
@@ -12,8 +12,13 @@ output: html_document
 library(dplyr)
 library(ggplot2)
 library(tidyr)
-
-
+library(data.table)
+library(VIM)
+library(mice)
+library(Rcpp)
+library(corrplot)
+library(stats)
+library(rstatix)
 ```
 
 # Load the Data
@@ -34,30 +39,159 @@ evaluation <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/
 
 ```{r}
 
-summary(training %>% subset(select=-INDEX))
+# Remove index column
+train_df <- training %>% subset(select=-INDEX)
+
+# Rename columns
+setnames(train_df, old = c('TARGET_WINS','TEAM_BATTING_H','TEAM_BATTING_2B','TEAM_BATTING_3B','TEAM_BATTING_HR','TEAM_BATTING_BB','TEAM_BATTING_SO','TEAM_BASERUN_SB','TEAM_BASERUN_CS','TEAM_BATTING_HBP','TEAM_PITCHING_H','TEAM_PITCHING_HR','TEAM_PITCHING_BB','TEAM_PITCHING_SO','TEAM_FIELDING_E','TEAM_FIELDING_DP'), new = c('wins','bat_H','bat_2b','bat_3b','bat_hr','bat_bb','bat_so','brun_sb','brun_cs','bat_hbp','pitch_h','pitch_hr','picth_bb','pitch_so','field_e','field_dp'))
+
+# Summary
+summary(train_df)
 
 ```
 
+We can see quite a few of the variables have missing values. The two primary methods to handle these missing values are imputation or data removal.  There are couple options to deal with these missing values.
+
+- remove rows containing missing values
+- replace missing values with an average value
+- replace missing value with a median value
 
 ```{r}
 
 # Gather all variables and values for density plot 
-training <- training %>% gather(variable, value, TARGET_WINS:TEAM_FIELDING_DP) %>% select(-INDEX) 
+train_denplot <- train_df %>% gather(variable, value, wins:field_dp) 
 
 # Density plot for all variables
-training %>%
+train_denplot %>%
   ggplot(., aes(value)) + 
   geom_density(fill = "#69b3a2", color="#e9ecef", alpha=0.8) + 
   facet_wrap(~variable, scales ="free", ncol = 4) +
   labs(x = element_blank(), y = element_blank())
 
 ```
+Many of the distributions are right skewed and some even a bimodal distribution.
+
+Let create a visual to represent missing values.
+
+```{r}
+
+aggr(train_df, col=c('blue','hotpink'),
+                    numbers=TRUE, sortVars=TRUE,
+                    labels=names(train_df), cex.axis=.5,
+                    gap=2, ylab=c("Missing data","Pattern"))
+
+```
+
+From chart above we can see there are 57% missing values in TEAM_BATTING_HBP, 15% missing values in TEAM_BASERUN_CS and so on. The histogram on the left also clearly depicts the influence of missing values in the variables.
 
 
 # Data Preparation
 
+```{r}
+
+# Using the mice package to impute the missing values
+imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
+
+```
+
+```{r}
+
+# Select complete imputed data set number 2
+complete_train_data <- complete(imputed_data,2)
+complete_train_data
+
+```
+
+Check correlation between each variable
+
+```{r}
+
+complete_train_data %>% dplyr::select(wins:field_dp) %>% 
+  cor() %>% as.matrix() %>% 
+  corrplot(type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+
+
+```
+Correlation Test
+
+```{r}
+
+complete_train_data %>% cor_test(wins, method="pearson", conf.level = 0.95)
+
+```
 
 # Build Models
 
 
+```{r}
+
+sat_lm <- lm(wins ~ bat_H+bat_2b+bat_3b+bat_hr+bat_bb+bat_so+brun_sb+brun_cs+bat_hbp+pitch_h+pitch_hr+picth_bb+pitch_so+field_e+field_dp, data = complete_train_data)
+
+summary(sat_lm)
+
+
+```
+
+We can use backward elimination method to eliminate variables do not contribute to the regression equation.
+
+```{r}
+
+
+
+
+```
+
+
+Evaluate the each of the 3 models through residuals plot and QQ plot.
+
+```{r}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(mlm_2$fitted.values, mlm_2$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 2e+5, lty = 3, col="red")
+abline(h = -2e+5, lty = 3, col="red")
+
+# Histogram plot
+hist(mlm_2$residuals, xlab="Residuals")
+
+qqnorm(mlm_2$residuals)
+qqline(mlm_2$residuals)
+
+```
+
+
 # Select Models
+
+
+Evaluate the best model through residuals plot and QQ plot again but this time we're using evaluation data set. 
+
+```{r}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(mlm_2$fitted.values, mlm_2$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 2e+5, lty = 3, col="red")
+abline(h = -2e+5, lty = 3, col="red")
+
+# Histogram plot
+hist(mlm_2$residuals, xlab="Residuals")
+
+qqnorm(mlm_2$residuals)
+qqline(mlm_2$residuals)
+
+```
+
+We can use Box-Cox transformation to transform non-normal dependent variable (wins) into a normal shape.
+
+```{r}
+
+
+
+```
