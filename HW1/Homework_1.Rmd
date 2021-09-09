@@ -85,6 +85,23 @@ aggr(train_df, col=c('blue','hotpink'),
 From chart above we can see there are 57% missing values in TEAM_BATTING_HBP, 15% missing values in TEAM_BASERUN_CS and so on. The histogram on the left also clearly depicts the influence of missing values in the variables.
 
 
+```{r}
+#Mario's input1: Count and percentage of records with missing data for each variable. Added the extra "count" column from Sie's table above.
+test <- train_df %>% 
+  gather(variable, value) %>%
+  filter(is.na(value)) %>%
+  group_by(variable) %>%
+  tally() %>%
+  mutate(percent = n / nrow(training) * 100) %>%
+  mutate(percent = paste0(round(percent, ifelse(percent < 10, 1, 0)), "%")) %>%
+  arrange(desc(n)) %>%
+  rename(`Variable Missing Data` = variable,
+         `Number of Records` = n,
+         `Share of Total` = percent)
+test
+```
+
+
 # Data Preparation
 
 ```{r}
