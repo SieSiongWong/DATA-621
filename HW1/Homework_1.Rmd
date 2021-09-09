@@ -101,6 +101,22 @@ test <- train_df %>%
 test
 ```
 
+```{r}
+#Mario's input2: We have some variables that have the value 0. Although there aren't many cases of this happening, it is still worth investigating if these are legitimate values.
+test2 <- train_df %>% 
+  gather(variable, value) %>%
+  filter(value == 0) %>%
+  group_by(variable) %>%
+  tally() %>%
+  mutate(percent = n / nrow(training) * 100) %>%
+  mutate(percent = paste0(round(percent, ifelse(percent < 10, 1, 0)), "%")) %>%
+  arrange(desc(n)) %>%
+  rename(`Variable With Zeros` = variable,
+         `Number of Records` = n,
+         `Share of Total` = percent)
+test2
+```
+
 
 # Data Preparation
 
@@ -135,6 +151,18 @@ Correlation Test
 
 complete_train_data %>% cor_test(wins, method="pearson", conf.level = 0.95)
 
+```
+
+```{r}
+#Mario's input3: Plotting the "wins" variable against each of the other variables, and drawing a best fit line through the plot also helps us visualize the relationship that exists between the response variable in respect to each individual explanatory variable.
+test3 <- complete_train_data %>%
+  gather(variable, value, -wins) %>%
+  ggplot(., aes(value, wins)) + 
+  geom_point(color="#69b3a2") + 
+  geom_smooth(method = "lm", se = FALSE, color = "black") + 
+  facet_wrap(~variable, scales ="free", ncol = 4) +
+  labs(x = element_blank(), y = "Wins")
+test3
 ```
 
 # Build Models
