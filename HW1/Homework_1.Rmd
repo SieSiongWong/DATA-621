@@ -19,6 +19,8 @@ library(Rcpp)
 library(corrplot)
 library(stats)
 library(rstatix)
+library(DataExplorer)
+
 ```
 
 # Load the Data
@@ -75,14 +77,16 @@ Let create a visual to represent missing values.
 
 ```{r}
 
-aggr(train_df, col=c('blue','hotpink'),
-                    numbers=TRUE, sortVars=TRUE,
-                    labels=names(train_df), cex.axis=.5,
-                    gap=2, ylab=c("Missing data","Pattern"))
+#aggr(train_df, col=c('blue','hotpink'),
+                    #numbers=TRUE, sortVars=TRUE,
+                    #labels=names(train_df), cex.axis=.5,
+                    #gap=2, ylab=c("Missing data","Pattern"))
+
+plot_missing(train_df)
 
 ```
 
-From chart above we can see there are 57% missing values in TEAM_BATTING_HBP, 15% missing values in TEAM_BASERUN_CS and so on. The histogram on the left also clearly depicts the influence of missing values in the variables.
+From chart above we can see there are 91% missing values in TEAM_BATTING_HBP variable, 34% missing values in TEAM_BASERUN_CS and so on.
 
 
 ```{r}
@@ -139,10 +143,11 @@ Check correlation between each variable
 
 ```{r}
 
-complete_train_data %>% dplyr::select(wins:field_dp) %>% 
-  cor() %>% as.matrix() %>% 
-  corrplot(type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
+#complete_train_data %>% dplyr::select(wins:field_dp) %>% 
+  #cor() %>% as.matrix() %>% 
+  #corrplot(type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 
+plot_correlation(train_df)
 
 ```
 Correlation Test
