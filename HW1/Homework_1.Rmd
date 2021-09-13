@@ -7,7 +7,7 @@ output: html_document
 
 # Load R Packages
 
-```{r}
+```{r Libraries}
 
 library(dplyr)
 library(ggplot2)
@@ -25,7 +25,7 @@ library(DataExplorer)
 
 # Load the Data
 
-```{r}
+```{r Data Importation}
 
 training <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/main/HW1/moneyball-training-data.csv", header=TRUE, sep=",")
 
@@ -39,7 +39,64 @@ evaluation <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/
 
 # Data Exploration
 
-```{r}
+With regards to our training set, we can see quite a few of the variables have missing values. The two primary methods to handle these missing values are imputation or data removal.  There are couple options to deal with these missing values.
+
+- remove rows containing missing values
+- replace missing values with an average value
+- replace missing value with a median value
+
+From our missing values chart, we can see that there are 91% missing values in TEAM_BATTING_HBP variable, 34% missing values in TEAM_BASERUN_CS and so on.
+
+```{r Data Exploration}
+
+# First 10 rows of DataSets
+
+head(training,10)
+head(evaluation,10)
+
+# Last 10 rows of DataSets
+
+tail(training,10)
+tail(evaluation,10)
+
+# Dimensions
+
+dim(training)
+dim(evaluation)
+
+# Column names
+
+colnames(training)
+colnames(evaluation)
+
+# Total NAs
+sum(is.na(training))
+sum(is.na(evaluation))
+
+# Graphical Exploration of DataSets
+
+## Densities
+
+plot_density(training)
+plot_density(evaluation)
+
+## Correlations
+
+plot_correlation(training)
+plot_correlation(evaluation)
+
+## Plot Missing Data
+
+plot_missing(training)
+plot_missing(evaluation)
+
+
+```
+
+
+# Data Transformation and Non Visual Data
+
+```{r Data Transformation}
 
 # Remove index column
 train_df <- training %>% subset(select=-INDEX)
@@ -47,51 +104,11 @@ train_df <- training %>% subset(select=-INDEX)
 # Rename columns
 setnames(train_df, old = c('TARGET_WINS','TEAM_BATTING_H','TEAM_BATTING_2B','TEAM_BATTING_3B','TEAM_BATTING_HR','TEAM_BATTING_BB','TEAM_BATTING_SO','TEAM_BASERUN_SB','TEAM_BASERUN_CS','TEAM_BATTING_HBP','TEAM_PITCHING_H','TEAM_PITCHING_HR','TEAM_PITCHING_BB','TEAM_PITCHING_SO','TEAM_FIELDING_E','TEAM_FIELDING_DP'), new = c('wins','bat_H','bat_2b','bat_3b','bat_hr','bat_bb','bat_so','brun_sb','brun_cs','bat_hbp','pitch_h','pitch_hr','picth_bb','pitch_so','field_e','field_dp'))
 
-# Summary
-summary(train_df)
-
 ```
 
-We can see quite a few of the variables have missing values. The two primary methods to handle these missing values are imputation or data removal.  There are couple options to deal with these missing values.
 
-- remove rows containing missing values
-- replace missing values with an average value
-- replace missing value with a median value
-
-```{r}
-
-# Gather all variables and values for density plot 
-train_denplot <- train_df %>% gather(variable, value, wins:field_dp) 
-
-# Density plot for all variables
-train_denplot %>%
-  ggplot(., aes(value)) + 
-  geom_density(fill = "#69b3a2", color="#e9ecef", alpha=0.8) + 
-  facet_wrap(~variable, scales ="free", ncol = 4) +
-  labs(x = element_blank(), y = element_blank())
-
-```
-Many of the distributions are right skewed and some even a bimodal distribution.
-
-Let create a visual to represent missing values.
-
-```{r}
-
-#aggr(train_df, col=c('blue','hotpink'),
-                    #numbers=TRUE, sortVars=TRUE,
-                    #labels=names(train_df), cex.axis=.5,
-                    #gap=2, ylab=c("Missing data","Pattern"))
-
-plot_missing(train_df)
-
-```
-
-From chart above we can see there are 91% missing values in TEAM_BATTING_HBP variable, 34% missing values in TEAM_BASERUN_CS and so on.
-
-
-```{r}
-#Mario's input1: Count and percentage of records with missing data for each variable. Added the extra "count" column from Sie's table above.
-test <- train_df %>% 
+```{r Non Visual Representation of NAs}
+NA_Buckets <- train_df %>% 
   gather(variable, value) %>%
   filter(is.na(value)) %>%
   group_by(variable) %>%
@@ -102,12 +119,13 @@ test <- train_df %>%
   rename(`Variable Missing Data` = variable,
          `Number of Records` = n,
          `Share of Total` = percent)
-test
-```
 
-```{r}
-#Mario's input2: We have some variables that have the value 0. Although there aren't many cases of this happening, it is still worth investigating if these are legitimate values.
-test2 <- train_df %>% 
+## Non Visual Breakout of Missing Data
+
+print(NA_Buckets)
+
+# Visual Representation of Zero Values
+Zero_Value_Buckets <- train_df %>% 
   gather(variable, value) %>%
   filter(value == 0) %>%
   group_by(variable) %>%
@@ -118,20 +136,27 @@ test2 <- train_df %>%
   rename(`Variable With Zeros` = variable,
          `Number of Records` = n,
          `Share of Total` = percent)
-test2
-```
 
+print(Zero_Value_Buckets)
+
+## Top 4 Require Further Inquiry
+
+top_zeros = head(Zero_Value_Buckets,4)
+
+## Only requires two dataframes as zero entries overlap between top 4 variables
+
+train_df %>% filter(bat_so==0)
+train_df %>% filter(pitch_hr==0)
+
+```
 
 # Data Preparation
 
-```{r}
+```{r Data Preparation}
 
 # Using the mice package to impute the missing values
 imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
 
-```
-
-```{r}
 
 # Select complete imputed data set number 2
 complete_train_data <- complete(imputed_data,2)
