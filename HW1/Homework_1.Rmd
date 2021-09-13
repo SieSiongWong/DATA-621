@@ -157,16 +157,19 @@ train_df %>% filter(pitch_hr==0)
 # Using the mice package to impute the missing values
 imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
 
-
+str(imputed_data)
 # Select complete imputed data set number 2
 complete_train_data <- complete(imputed_data,2)
 complete_train_data
 
+# Density plot of completed dataset
+
+plot_density(complete_train_data)
 ```
 
 Check correlation between each variable
 
-```{r}
+```{r Correlation Test}
 
 complete_train_data %>% dplyr::select(wins:field_dp) %>% 
   cor() %>% as.matrix() %>% 
@@ -179,26 +182,25 @@ Correlation Test
 
 complete_train_data %>% cor_test(wins, method="pearson", conf.level = 0.95)
 
-```
+#Correlation Visualization
 
-```{r}
-#Mario's input3: Plotting the "wins" variable against each of the other variables, and drawing a best fit line through the plot also helps us visualize the relationship that exists between the response variable in respect to each individual explanatory variable.
-test3 <- complete_train_data %>%
+corr_complete_data_viz <- complete_train_data %>%
   gather(variable, value, -wins) %>%
   ggplot(., aes(value, wins)) + 
   geom_point(color="#69b3a2") + 
   geom_smooth(method = "lm", se = FALSE, color = "black") + 
   facet_wrap(~variable, scales ="free", ncol = 4) +
   labs(x = element_blank(), y = "Wins")
-test3
+
+corr_complete_data_viz
 ```
 
 # Build Models
 
 
-```{r}
+```{r LM}
 
-sat_lm <- lm(wins ~ bat_H+bat_2b+bat_3b+bat_hr+bat_bb+bat_so+brun_sb+brun_cs+bat_hbp+pitch_h+pitch_hr+picth_bb+pitch_so+field_e+field_dp, data = complete_train_data)
+sat_lm <- lm(wins ~ ., data = complete_train_data)
 
 summary(sat_lm)
 
