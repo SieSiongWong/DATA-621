@@ -143,11 +143,9 @@ Check correlation between each variable
 
 ```{r}
 
-#complete_train_data %>% dplyr::select(wins:field_dp) %>% 
-  #cor() %>% as.matrix() %>% 
-  #corrplot(type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
-
-plot_correlation(train_df)
+complete_train_data %>% dplyr::select(wins:field_dp) %>% 
+  cor() %>% as.matrix() %>% 
+  corrplot(type = "upper", order = "hclust", tl.col = "black", tl.srt = 45)
 
 ```
 Correlation Test
