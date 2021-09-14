@@ -153,6 +153,8 @@ train_df %>% filter(pitch_hr==0)
 # Data Preparation
 
 ```{r Data Preparation}
+# Drop the bat_hbp variable
+train_df <- train_df %>% select(-bat_hbp)
 
 # Using the mice package to impute the missing values
 imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
@@ -204,17 +206,39 @@ sat_lm <- lm(wins ~ ., data = complete_train_data)
 
 summary(sat_lm)
 
-
 ```
 
 We can use backward elimination method to eliminate variables do not contribute to the regression equation.
+From the summary, we can see these 3 variables pitch_hr,picth_bb,brun_cs which p-value are statistically insignificant. 
 
-```{r}
+```{r drop insignificant variables}
 
-
-
+# Test whether pitch_hr, picth_bb, brun_cs can be dropped
+lm <- lm(wins ~ ., data = subset(complete_train_data, select=-c(pitch_hr,picth_bb,brun_cs)))
+anova(lm, sat_lm)
 
 ```
+
+All the 3 variables can be dropped as its p-value of F-test is 0.74. The null hypothesis cannot be rejected.
+
+```{r permutation test}
+# Normal theory-based
+lms <- summary(lm)
+format.pval(1 - pf(lms$fstatistic[1],lms$fstatistic[2],lms$fstatistic[3]))
+
+# Permutation test
+nreps <- 4000
+set.seed(123)
+fstats <- numeric(nreps)
+for(i in 1:nreps){
+  lmods <- lm(sample(wins) ~ ., data = subset(complete_train_data,select=-c(pitch_hr,picth_bb,brun_cs)))
+  fstats[i] <- summary(lmods)$fstat[1]
+}
+
+format.pval(mean(fstats > lms$fstat[1]))
+```
+
+We can see the permutation test result similar to the normal theory-based value of 2.22e-16.
 
 
 Evaluate the each of the 3 models through residuals plot and QQ plot.
@@ -224,17 +248,17 @@ Evaluate the each of the 3 models through residuals plot and QQ plot.
 par(mfrow=c(2,2))
 
 # Residuals plot
-plot(mlm_2$fitted.values, mlm_2$residuals, 
+plot(lm$fitted.values, lm$residuals, 
      xlab='Fitted Values', ylab='Residuals')
 abline(h = 0, lty = 3, col="blue")
 abline(h = 2e+5, lty = 3, col="red")
 abline(h = -2e+5, lty = 3, col="red")
 
 # Histogram plot
-hist(mlm_2$residuals, xlab="Residuals")
+hist(lm$residuals, xlab="Residuals")
 
-qqnorm(mlm_2$residuals)
-qqline(mlm_2$residuals)
+qqnorm(lm$residuals)
+qqline(lm$residuals)
 
 ```
 
@@ -249,17 +273,17 @@ Evaluate the best model through residuals plot and QQ plot again but this time w
 par(mfrow=c(2,2))
 
 # Residuals plot
-plot(mlm_2$fitted.values, mlm_2$residuals, 
+plot(lm_ev$fitted.values, lm_ev$residuals, 
      xlab='Fitted Values', ylab='Residuals')
 abline(h = 0, lty = 3, col="blue")
 abline(h = 2e+5, lty = 3, col="red")
 abline(h = -2e+5, lty = 3, col="red")
 
 # Histogram plot
-hist(mlm_2$residuals, xlab="Residuals")
+hist(lm_ev$residuals, xlab="Residuals")
 
-qqnorm(mlm_2$residuals)
-qqline(mlm_2$residuals)
+qqnorm(lm_ev$residuals)
+qqline(lm_ev$residuals)
 
 ```
 
