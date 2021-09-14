@@ -90,6 +90,14 @@ plot_correlation(evaluation)
 plot_missing(training)
 plot_missing(evaluation)
 
+# Dataset Summaries
+
+summary(training)
+summary(evaluation)
+
+# Std Devs assuming NAs are filtered out
+
+training %>% gather(variable, value) %>% filter(!is.na(value)) %>% group_by(variable) %>% summarize(sd = sd(value))
 
 ```
 
@@ -159,7 +167,7 @@ train_df <- train_df %>% select(-bat_hbp)
 # Using the mice package to impute the missing values
 imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
 
-str(imputed_data)
+
 # Select complete imputed data set number 2
 complete_train_data <- complete(imputed_data,2)
 complete_train_data
