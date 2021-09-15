@@ -160,7 +160,7 @@ train_df %>% filter(pitch_hr==0)
 
 # Data Preparation
 
-```{r Data Preparation}
+```{r data preparation}
 # Drop the bat_hbp variable
 train_df <- train_df %>% select(-bat_hbp)
 
@@ -210,21 +210,20 @@ corr_complete_data_viz
 
 ```{r LM}
 # Saturated linear regression model
+r.squared <- c()
 sat_lm <- lm(wins ~ ., data = complete_train_data)
-
 summary(sat_lm)
-
+r.squared['full'] = summary(sat_lm)$adj.r.squared
 ```
 
 We can use backward elimination method to eliminate variables do not contribute to the regression equation.
+
 From the summary, we can see these 3 variables pitch_hr,picth_bb,brun_cs which p-value are statistically insignificant. 
 
 ```{r drop insignificant variables}
-
 # Test whether pitch_hr, picth_bb, brun_cs can be dropped
 lm <- lm(wins ~ ., data = subset(complete_train_data, select=-c(pitch_hr,picth_bb,brun_cs)))
 anova(lm, sat_lm)
-
 ```
 
 All the 3 variables can be dropped as its p-value of F-test is 0.74. The null hypothesis cannot be rejected.
@@ -248,28 +247,54 @@ format.pval(mean(fstats > lms$fstat[1]))
 
 We can see the permutation test result similar to the normal theory-based value of 2.22e-16. Also, the p-value is less than the significance level, we can reject the null hypothesis. This indicates the imputed training data set provides sufficient evidence to conclude that regression model fits the data better than the model with no predictor variables.
 
+Check the linear model summary to determine which variables can also be dropped.
 
-Evaluate the each of the 3 models through residuals plot and QQ plot.
+```{r build 3 models}
+summary(lm)
+r.squared['lm'] = summary(lm)$adj.r.squared
+```
 
-```{r}
+By looking at the correlation visualization created in above and also the p-values from the summary, below variables we think can be removed to build second model.
+- bat_2b
+- bat_3b
+- pitch_so
 
+```{r 2nd model}
+lm_2 <- lm(wins ~ ., data = subset(complete_train_data, select=-c(pitch_hr,picth_bb,brun_cs,bat_2b,bat_3b,pitch_so)))
+summary(lm_2)
+r.squared['lm_2'] = summary(lm_2)$adj.r.squared
+```
+As bat_bb variable p-value now is highest in the list, we remove this variable to build third model.
+
+```{r 3rd model}
+lm_3 <- lm(wins ~ ., data = subset(complete_train_data, select=-c(pitch_hr,picth_bb,brun_cs,bat_2b,bat_3b,pitch_so,bat_bb)))
+summary(lm_3)
+r.squared['lm_3'] = summary(lm_3)$adj.r.squared
+r.squared
+```
+
+Evaluate the best adjusted R-squared mode through residuals plot and QQ plot.
+
+```{r evaluate}
 par(mfrow=c(2,2))
 
 # Residuals plot
 plot(lm$fitted.values, lm$residuals, 
      xlab='Fitted Values', ylab='Residuals')
 abline(h = 0, lty = 3, col="blue")
-abline(h = 2e+5, lty = 3, col="red")
-abline(h = -2e+5, lty = 3, col="red")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
 
 # Histogram plot
 hist(lm$residuals, xlab="Residuals")
 
+# QQ plot
 qqnorm(lm$residuals)
 qqline(lm$residuals)
 
 ```
 
+From the residuals, histogram, and qq plot, we can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression.
 
 # Select Models
 
