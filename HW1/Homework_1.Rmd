@@ -190,7 +190,7 @@ Correlation Test
 
 ```{r}
 
-complete_train_data %>% cor_test(wins, method="pearson", conf.level = 0.95)
+complete_train_data %>% cor_test(wins, method="pearson", conf.level = 0.95) %>% arrange(desc(cor))
 
 #Correlation Visualization
 
@@ -209,7 +209,7 @@ corr_complete_data_viz
 
 
 ```{r LM}
-
+# Saturated linear regression model
 sat_lm <- lm(wins ~ ., data = complete_train_data)
 
 summary(sat_lm)
