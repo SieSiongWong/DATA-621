@@ -230,11 +230,11 @@ anova(lm, sat_lm)
 All the 3 variables can be dropped as its p-value of F-test is 0.74. The null hypothesis cannot be rejected.
 
 ```{r permutation test}
-# Normal theory-based
+# Normal theory-based p-value
 lms <- summary(lm)
 format.pval(1 - pf(lms$fstatistic[1],lms$fstatistic[2],lms$fstatistic[3]))
 
-# Permutation test
+# Permutation test based p-value
 nreps <- 4000
 set.seed(123)
 fstats <- numeric(nreps)
@@ -246,7 +246,7 @@ for(i in 1:nreps){
 format.pval(mean(fstats > lms$fstat[1]))
 ```
 
-We can see the permutation test result similar to the normal theory-based value of 2.22e-16.
+We can see the permutation test result similar to the normal theory-based value of 2.22e-16. Also, the p-value is less than the significance level, we can reject the null hypothesis. This indicates the imputed training data set provides sufficient evidence to conclude that regression model fits the data better than the model with no predictor variables.
 
 
 Evaluate the each of the 3 models through residuals plot and QQ plot.
