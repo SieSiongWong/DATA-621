@@ -99,6 +99,8 @@ summary(evaluation)
 
 training %>% gather(variable, value) %>% filter(!is.na(value)) %>% group_by(variable) %>% summarize(sd = sd(value))
 
+evaluation %>% gather(variable, value) %>% filter(!is.na(value)) %>% group_by(variable) %>% summarize(sd = sd(value))
+
 ```
 
 
@@ -292,6 +294,9 @@ hist(lm$residuals, xlab="Residuals")
 qqnorm(lm$residuals)
 qqline(lm$residuals)
 
+# Check for nonconstant variances: H0: Nonconstant Variance, HA: Constant Variance
+# P-value of .011 <.05, reject null hypothesis for alternative indicating Constant Variance
+summary (lm (abs (lm$residuals) ~ lm$fitted.values))
 ```
 
 From the residuals, histogram, and qq plot, we can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression.
