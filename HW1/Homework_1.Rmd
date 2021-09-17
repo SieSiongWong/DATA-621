@@ -277,7 +277,7 @@ r.squared
 
 Evaluate the best adjusted R-squared mode through residuals plot and QQ plot.
 
-```{r evaluate}
+```{r evaluate lm}
 par(mfrow=c(2,2))
 
 # Residuals plot
@@ -306,8 +306,68 @@ summary (lm (abs (lm$residuals) ~ lm$fitted.values))
 shapiro.test(lm$residuals)
 
 ```
+```{r evaluate lm2}
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm_2$fitted.values, lm_2$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm_2$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm_2$residuals)
+qqline(lm_2$residuals)
+
+# Check for nonconstant variances: H0: Constant Variance, HA: Nonconstant Variance
+# P-value <.05, reject null hypothesis for alternative indicating Nonconstant Variance
+summary (lm(abs (lm_2$residuals) ~ lm_2$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value <.05 so we reject the null hypothesis in favor of the alternative indicating
+# Residuals are not normally distributed
+
+shapiro.test(lm_2$residuals)
+
+```
+
+```{r evaluate lm3}
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm_3$fitted.values, lm_3$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm_3$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm_3$residuals)
+qqline(lm_3$residuals)
+
+# Check for nonconstant variances: H0: Constant Variance, HA: Nonconstant Variance
+# P-value <.05, reject null hypothesis for alternative indicating Nonconstant Variance
+summary (lm(abs (lm_3$residuals) ~ lm_3$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value <.05 so we reject the null hypothesis in favor of the alternative indicating
+# Residuals are not normally distributed
+
+shapiro.test(lm_3$residuals)
+
+```
 
 From the residuals, histogram, and qq plot, we can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression.
+#
 
 # Select Models
 
