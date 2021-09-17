@@ -20,7 +20,7 @@ library(corrplot)
 library(stats)
 library(rstatix)
 library(DataExplorer)
-
+library(caret)
 ```
 
 # Load the Data
@@ -373,6 +373,45 @@ From the residuals, histogram, and qq plot, we can see this model meets the 3 co
 
 
 Evaluate the best model through residuals plot and QQ plot again but this time we're using evaluation data set. 
+
+Mario's commit:
+
+Below, we will evaluate the models we have built using the Root Mean Square Error (RMSE) in order to determine the model with the smallest errors. 
+
+We will also construct a visual representation of the errors in a histogram for each model to show how many of the predicted values are closer to an error of 0 in regards to the actual values.
+
+```{r MarioEval1}
+#This section should go before the models. Let's discuss possible variable names that will need to be used in the models above.
+
+set.seed(123)
+train_index <- createDataPartition(complete_train_data$wins, p = .7, list = FALSE, times = 1)
+additional_train <- complete_train_data[train_index,]
+additional_test <- complete_train_data[-train_index,]
+```
+
+
+```{r MarioEval2}
+additional_test$lm <- predict(lm, additional_test)
+additional_test <- additional_test %>% mutate(lm_error = wins - lm)
+ggplot(additional_test, aes(lm_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm_error^2)),2)),color="white")
+```
+
+```{r MarioEval3}
+additional_test$lm_2 <- predict(lm_2, additional_test)
+additional_test <- additional_test %>% mutate(lm_2_error = wins - lm_2)
+ggplot(additional_test, aes(lm_2_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm_2_error^2)),2)),color="white")
+```
+
+```{r MarioEval4}
+additional_test$lm_3 <- predict(lm_3, additional_test)
+additional_test <- additional_test %>% mutate(lm_3_error = wins - lm_3)
+ggplot(additional_test, aes(lm_3_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm_3_error^2)),2)),color="white")
+```
+
+As we can see, the first model has the lowest RMSE, which means this model has fewer errors than the other two.
 
 ```{r}
 
