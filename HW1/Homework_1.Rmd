@@ -294,9 +294,17 @@ hist(lm$residuals, xlab="Residuals")
 qqnorm(lm$residuals)
 qqline(lm$residuals)
 
-# Check for nonconstant variances: H0: Nonconstant Variance, HA: Constant Variance
-# P-value of .011 <.05, reject null hypothesis for alternative indicating Constant Variance
+# Check for nonconstant variances: H0: Constant Variance, HA: Nonconstant Variance
+# P-value of .011 <.05, reject null hypothesis for alternative indicating Nonconstant Variance
 summary (lm (abs (lm$residuals) ~ lm$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value <.05 so we reject the null hypothesis in favor of the alternative indicating
+# Residuals are not normally distributed
+
+shapiro.test(lm$residuals)
+
 ```
 
 From the residuals, histogram, and qq plot, we can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression.
