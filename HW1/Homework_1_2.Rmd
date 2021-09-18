@@ -120,32 +120,79 @@ Now, we want to remove outliers from the dataset.
 
 ```{r}
 
+# Remove outlier for TEAM_BATTING_H variable
+Q <- quantile(complete_train_data$TEAM_BATTING_H, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_H)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_H > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_H < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BATTING_2B variable
+Q <- quantile(complete_train_data$TEAM_BATTING_2B, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_2B)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_2B > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_2B < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BATTING_3B variable
+Q <- quantile(complete_train_data$TEAM_BATTING_3B, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_3B)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_3B > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_3B < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BATTING_HR variable
+Q <- quantile(complete_train_data$TEAM_BATTING_HR, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_HR)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_HR > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_HR < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BATTING_BB variable
+Q <- quantile(complete_train_data$TEAM_BATTING_BB, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_BB)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_BB > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_BB < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BATTING_SO variable
+Q <- quantile(complete_train_data$TEAM_BATTING_SO, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BATTING_SO)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BATTING_SO > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BATTING_SO < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BASERUN_SB variable
+Q <- quantile(complete_train_data$TEAM_BASERUN_SB, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BASERUN_SB)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BASERUN_SB > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BASERUN_SB < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_BASERUN_CS variable
+Q <- quantile(complete_train_data$TEAM_BASERUN_CS, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_BASERUN_CS)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BASERUN_CS > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BASERUN_CS < (Q[2]+1.5*iqr))
+
 # Remove outlier for TEAM_PITCHING_H variable
 Q <- quantile(complete_train_data$TEAM_PITCHING_H, probs=c(.25, .75), na.rm = FALSE)
 iqr <- IQR(complete_train_data$TEAM_PITCHING_H)
 complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_PITCHING_H > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_PITCHING_H < (Q[2]+1.5*iqr))
 
-# Remove outlier for TEAM_PITCHING_H variable
-Q <- quantile(complete_train_data$TEAM_FIELDING_E, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(complete_train_data$TEAM_FIELDING_E)
-complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_FIELDING_E > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_FIELDING_E < (Q[2]+1.5*iqr))
+# Remove outlier for TEAM_PITCHING_HR variable
+Q <- quantile(complete_train_data$TEAM_PITCHING_HR, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_PITCHING_HR)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_PITCHING_HR > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_PITCHING_HR < (Q[2]+1.5*iqr))
 
-# Remove outlier for TEAM_PITCHING_H variable
+# Remove outlier for TEAM_PITCHING_BB variable
 Q <- quantile(complete_train_data$TEAM_PITCHING_BB, probs=c(.25, .75), na.rm = FALSE)
 iqr <- IQR(complete_train_data$TEAM_PITCHING_BB)
 complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_PITCHING_BB > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_PITCHING_BB < (Q[2]+1.5*iqr))
 
-# Remove outlier for TEAM_PITCHING_H variable
-Q <- quantile(complete_train_data$TEAM_BASERUN_SB, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(complete_train_data$TEAM_BASERUN_SB)
-complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BASERUN_SB > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BASERUN_SB < (Q[2]+1.5*iqr))
+# Remove outlier for TEAM_PITCHING_SO variable
+Q <- quantile(complete_train_data$TEAM_PITCHING_SO, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_PITCHING_SO)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_PITCHING_SO > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_PITCHING_SO < (Q[2]+1.5*iqr))
 
-# Remove outlier for TEAM_PITCHING_H variable
-Q <- quantile(complete_train_data$TEAM_BASERUN_CS, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(complete_train_data$TEAM_BASERUN_CS)
-complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_BASERUN_CS > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_BASERUN_CS < (Q[2]+1.5*iqr))
+# Remove outlier for TEAM_FIELDING_E variable
+Q <- quantile(complete_train_data$TEAM_FIELDING_E, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_FIELDING_E)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_FIELDING_E > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_FIELDING_E < (Q[2]+1.5*iqr))
+
+# Remove outlier for TEAM_FIELDING_DP variable
+Q <- quantile(complete_train_data$TEAM_FIELDING_DP, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(complete_train_data$TEAM_FIELDING_DP)
+complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_FIELDING_DP > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_FIELDING_DP < (Q[2]+1.5*iqr))
 
 complete_train_data %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
+
+complete_train_data %>% plot_histogram()
 
 ```
 
