@@ -229,6 +229,8 @@ From the summary, we can see these 4 variables: TEAM_BATTING_H, TEAM_BASERUN_CS,
 
 # Test whether pitch_hr, picth_bb, brun_cs can be dropped
 lm <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+r.squared['lm'] = summary(lm)$adj.r.squared
+summary(lm)
 anova(lm, sat_lm)
 
 ```
@@ -292,11 +294,12 @@ shapiro.test(lm$residuals)
 
 ```
 
-Check the linear model summary to determine which variables can also be dropped.
+By referring to the collinear analysis done previously, we can drop one of these two variables (TEAM_BATTING_BB, TEAM_PITCHING_BB) as one of them can represent the other.  
 
-```{r}
+```{r 2nd model}
 
-summary(lm)
+lm2 <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
+summary(lm2)
 r.squared['lm'] = summary(lm)$adj.r.squared
 
 ```
