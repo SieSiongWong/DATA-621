@@ -211,6 +211,15 @@ plot_correlation(complete_train_data)
 
 # Build Models
 
+```{r partition}
+
+set.seed(123)
+train_index <- createDataPartition(complete_train_data$TARGET_WINS, p = .7, list = FALSE, times = 1)
+additional_train <- complete_train_data[train_index,]
+additional_test <- complete_train_data[-train_index,]
+
+```
+
 ```{r saturated model}
 
 # Saturated linear regression model
@@ -260,7 +269,7 @@ We can see the permutation test result similar to the normal theory-based value 
 
 Evaluate the first model through residuals plot and QQ plot and also Shapiro-Wilk normality test. We can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression and also the Shapiro-Wilk normality test is greater than 0.05 indicating normality of the data.
 
-```{r}
+```{r lm test}
 
 par(mfrow=c(2,2))
 
@@ -279,15 +288,14 @@ qqnorm(lm$residuals)
 qqline(lm$residuals)
 
 
-# Check for nonconstant variances: H0: Constant Variance, HA: Nonconstant Variance
-# P-value of .011 <.05, reject null hypothesis for alternative indicating Nonconstant Variance
+# Test for constant variance
 
 summary (lm (abs (lm$residuals) ~ lm$fitted.values))
 
 # Test Residuals for Normality
 # H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
-# P-value <.05 so we reject the null hypothesis in favor of the alternative indicating
-# Residuals are not normally distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
 
 shapiro.test(lm$residuals)
 
@@ -300,6 +308,111 @@ By referring to the collinear analysis done previously, we can drop one of these
 
 lm2 <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
 summary(lm2)
-r.squared['lm'] = summary(lm)$adj.r.squared
+r.squared['lm'] = summary(lm2)$adj.r.squared
+
+```
+
+```{r lm2 test}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm2$fitted.values, lm2$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm2$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm2$residuals)
+qqline(lm2$residuals)
+
+
+# Test for constant variance
+
+summary (lm (abs (lm2$residuals) ~ lm2$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
+
+shapiro.test(lm2$residuals)
+
+
+```
+
+Examining the correlations of all three models, we can see that model two seems to operate the most efficiently. To build a third and possibly more efficient model we can remove variables TEAM_BASERUN_SB, and TEAM_BATTING_3B  as their correlation to TARGET_WINS is nearly 0 allowing us to infer that the impact is negligible. From a real
+world perspective this makes sense as stolen bases and triples are rarer events with teams who can consistently put players on the bases through singles and doubles seemingly having a greater wins. We can substantiate this based on the prediction results of the three models.
+
+```{r correlation for final model}
+summary(sat_lm,corr=TRUE)$corr
+summary(lm,corr=TRUE)$corr
+summary(lm2,corr=TRUE)$corr
+```
+
+
+```{r 3rd model}
+
+lm3 <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
+summary(lm3)
+r.squared['lm'] = summary(lm3)$adj.r.squared
+
+```
+
+```{r lm3 test}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm3$fitted.values, lm3$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm3$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm3$residuals)
+qqline(lm3$residuals)
+
+
+# Test for constant variance
+
+summary (lm (abs (lm3$residuals) ~ lm3$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
+
+shapiro.test(lm3$residuals)
+
+
+```
+
+Predict values based on 3 models
+
+```{r Prediction results}
+
+results_model_one = predict(lm,newdata = complete_train_data)
+results_model_two = predict(lm2,newdata = complete_train_data)
+results_model_three = predict(lm3,newdata = complete_train_data)
+
+results_df = data.frame(complete_train_data$TARGET_WINS,results_model_one,results_model_two,results_model_three)
+
+ggplot(results_df,aes(results_model_one,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+ggplot(results_df,aes(results_model_two,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+ggplot(results_df,aes(results_model_three,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
 
 ```
