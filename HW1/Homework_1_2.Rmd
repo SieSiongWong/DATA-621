@@ -410,20 +410,28 @@ Predict values based on 3 models
 
 ```{r Prediction results}
 
-results_model_one = predict(lm,newdata = complete_train_data)
-results_model_two = predict(lm2,newdata = complete_train_data)
-results_model_three = predict(lm3,newdata = complete_train_data)
+results_model_one = predict(lm,newdata = additional_test)
+results_model_two = predict(lm2,newdata = additional_test)
+results_model_three = predict(lm3,newdata = additional_test)
 
-results_df = data.frame(complete_train_data$TARGET_WINS,results_model_one,results_model_two,results_model_three)
+results_df = data.frame(additional_test$TARGET_WINS,results_model_one,results_model_two,results_model_three)
 
-ggplot(results_df,aes(results_model_one,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+ggplot(results_df,aes(results_model_one,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
   labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
 
-ggplot(results_df,aes(results_model_two,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+ggplot(results_df,aes(results_model_two,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
   labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
 
-ggplot(results_df,aes(results_model_three,complete_train_data.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+ggplot(results_df,aes(results_model_three,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
   labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+
+# Min-Max Accuracy Calculation
+#min_max_accuracy <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_mo#del_one), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_o#ne), 1, max))  
+
+
+# MAPE Calculation
+#mape <- mean(abs((actuals_preds$predicteds - #actuals_preds$actuals))/actuals_preds$actuals)  
 
 ```
 
