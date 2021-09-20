@@ -120,7 +120,9 @@ complete_train_data$TEAM_PITCHING_BB[complete_train_data$TEAM_PITCHING_BB==0] <-
 
 ```
 
-Now, we want to remove outliers from the dataset.
+Now, we want to remove outliers from the dataset as many statistical parameters such as mean, standard deviation, correlation are very sensitive to outliers. One of the ways to locate outliers and eliminate is using Interquartile Range (IQR) method. In this method, a point is treated as an outlier if it's above the 75th or below the 25th percentile by a factor of 1.5 times the IQR.
+
+After we've removed outliers, the boxplot looks much better compared to the original. Also, the distribution for some variables as shown in the histogram also got improved a lot, nearly normal.
 
 ```{r}
 
