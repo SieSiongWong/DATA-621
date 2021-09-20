@@ -194,7 +194,11 @@ Q <- quantile(complete_train_data$TEAM_FIELDING_DP, probs=c(.25, .75), na.rm = F
 iqr <- IQR(complete_train_data$TEAM_FIELDING_DP)
 complete_train_data <- subset(complete_train_data, complete_train_data$TEAM_FIELDING_DP > (Q[1] - 1.5*iqr) & complete_train_data$TEAM_FIELDING_DP < (Q[2]+1.5*iqr))
 
-complete_train_data %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
+#complete_train_data %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
+complete_train_data %>% gather(variable, value) %>% 
+  ggplot(aes(x=variable, y=value)) + 
+  geom_boxplot(aes(fill=variable)) + facet_wrap( ~ variable, scales="free") + 
+  theme(legend.position = "none", axis.text.y=element_blank()) + coord_flip()
 
 complete_train_data %>% plot_histogram()
 
