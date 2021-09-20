@@ -67,13 +67,14 @@ From the statistic summary table above, we can see there are outliers exist in m
 
 training %>% select(-INDEX) %>% plot_histogram()
 training %>% select(-INDEX) %>% plot_density()
-training %>% select(-INDEX) %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
-
+#training %>% select(-INDEX) %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
+training %>% select(-INDEX) %>% gather(variable, value) %>% 
+  ggplot(aes(x=variable, y=value)) + 
+  geom_boxplot(aes(fill=variable)) + facet_wrap( ~ variable, scales="free") + 
+  theme(legend.position = "none", axis.text.y=element_blank()) + coord_flip()
 ```
 
 In additional to above analysis, below chart is showing percentage of missing values for each variable and the table is showing the number of records have zero value. we can see quite a few of the variables have missing values and contain zero value. The TEAM_BATTING_HBP variable can be dropped as it has 92% missing data.
-
-For the missing value, we'll impute the data and for the zero value we will do replacement with mean value for that variable.
 
 ```{r}
 
@@ -90,7 +91,10 @@ training %>% select(-INDEX) %>% gather(variable, value) %>% filter(value == 0) %
 
 # Data Preparation
 
-In below chunk of codes, we're dropping INDEX and TEAM_BATTING_HBP variable as these two variables are useless. Also, we're imputing the missing value using the MICE package and then replace zero value with mean.
+We assume the missing data are Missing at Random and choose to impute. The reason we want to impute the missing data rather than replacing with mean or median because of large number of missing values. If we're replacing with mean or median on the large number of missing values, can result in loss of variation in data.
+
+We're imputing the missing data using the MICE package. The method of predictive mean matching (PMM) is selected for continuous variables. Before doing imputation, we drop the INDEX and TEAM_BATTING_HBP variables as these two variables are useless.
+  
 ```{r}
 
 # Drop the index and bat_hbp variable
