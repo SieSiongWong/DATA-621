@@ -234,7 +234,7 @@ additional_test <- complete_train_data[-train_index,]
 
 # Saturated linear regression model
 r.squared <- c()
-sat_lm <- lm(TARGET_WINS ~ ., data = complete_train_data)
+sat_lm <- lm(TARGET_WINS ~ ., data = additional_train)
 summary(sat_lm)
 r.squared['full'] = summary(sat_lm)$adj.r.squared
 
@@ -247,7 +247,7 @@ From the summary, we can see these 4 variables: TEAM_BATTING_H, TEAM_BASERUN_CS,
 ```{r 1st model}
 
 # Test whether pitch_hr, picth_bb, brun_cs can be dropped
-lm <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+lm <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
 r.squared['lm'] = summary(lm)$adj.r.squared
 summary(lm)
 anova(lm, sat_lm)
@@ -267,7 +267,7 @@ nreps <- 5000
 set.seed(123)
 fstats <- numeric(nreps)
 for(i in 1:nreps){
-  lmods <- lm(sample(TARGET_WINS) ~ ., data = subset(complete_train_data,select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+  lmods <- lm(sample(TARGET_WINS) ~ ., data = subset(additional_train,select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
   fstats[i] <- summary(lmods)$fstat[1]
 }
 
@@ -316,7 +316,7 @@ By referring to the collinear analysis done previously, we can drop one of these
 
 ```{r 2nd model}
 
-lm2 <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
+lm2 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
 summary(lm2)
 r.squared['lm'] = summary(lm2)$adj.r.squared
 
@@ -367,7 +367,7 @@ summary(lm2,corr=TRUE)$corr
 
 ```{r 3rd model}
 
-lm3 <- lm(TARGET_WINS ~ ., data = subset(complete_train_data, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
+lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
 summary(lm3)
 r.squared['lm'] = summary(lm3)$adj.r.squared
 
@@ -426,3 +426,28 @@ ggplot(results_df,aes(results_model_three,complete_train_data.TARGET_WINS)) + ge
   labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
 
 ```
+
+Additional Evaluations
+
+```{r MarioEval1}
+additional_test$lm <- predict(lm, additional_test)
+additional_test <- additional_test %>% mutate(lm_error = TARGET_WINS - lm)
+ggplot(additional_test, aes(lm_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm_error^2)),2)),color="white")
+```
+
+```{r MarioEval2}
+additional_test$lm2 <- predict(lm2, additional_test)
+additional_test <- additional_test %>% mutate(lm2_error = TARGET_WINS - lm2)
+ggplot(additional_test, aes(lm2_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm2_error^2)),2)),color="white")
+```
+
+```{r MarioEval3}
+additional_test$lm3 <- predict(lm3, additional_test)
+additional_test <- additional_test %>% mutate(lm3_error = TARGET_WINS - lm3)
+ggplot(additional_test, aes(lm3_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm3_error^2)),2)),color="white")
+```
+
+As we can see, the first model has the lowest RMSE, which means this model has fewer errors than the other two.
