@@ -1,0 +1,376 @@
+---
+title: 'Homework #1 V2'
+author: "Sie Siong Wong"
+date: "9/17/2021"
+output: html_document
+---
+
+# Load R Packages
+
+```{r warning=FALSE, message=FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(data.table)
+library(VIM)
+library(mice)
+library(Rcpp)
+library(corrplot)
+library(stats)
+library(rstatix)
+library(DataExplorer)
+library(caret)
+library(psych)
+library(janitor)
+```
+
+# Load the Data
+
+```{r Data Importation}
+
+training <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/main/HW1/moneyball-training-data.csv", header=TRUE, sep=",")
+
+evaluation <- read.csv("https://raw.githubusercontent.com/SieSiongWong/DATA-621/main/HW1/moneyball-evaluation-data.csv", header=TRUE, sep=",")
+
+```
+
+# Data Exploration
+
+Data set structure
+
+```{r}
+str(training)
+str(evaluation)
+```
+Given training data set has 17 variables and 2276 observations while evaluation data set only has 16 variables and 259 observations. Evaluation data set is used to evaluate the performance of the final model and that is why it does not have WINS variable given. All variables are integer data type. 
+
+The response variable will be TEAM_WINS and the rest variables are predictors. Let's do column names comparison for both dataset to make sure same variable exist on both dataset except WINS variable.
+
+```{r}
+
+list(training,evaluation) %>% compare_df_cols() %>% `colnames<-`(c('Column Name', 'Training', 'Evaluation'))
+
+```
+
+Statistics summary and visualization for training data set
+
+```{r}
+
+training %>% select(-INDEX) %>% describe()
+
+```
+
+From the statistic summary table above, we can see there are outliers exist in many variables, many of them are heavily skewed, and bimodal. We can visualize this clearly in below charts. We're going to deal with these issues later in data preparation section.
+
+```{r}
+
+training %>% select(-INDEX) %>% plot_histogram()
+training %>% select(-INDEX) %>% plot_density()
+#training %>% select(-INDEX) %>% gather(variable, value) %>% plot_boxplot(by='variable',geom_boxplot_args = list("outlier.color" = "red"))
+training %>% select(-INDEX) %>% plot_boxplot(by="TARGET_WINS")
+```
+
+In additional to above analysis, below chart is showing percentage of missing values for each variable and the table is showing the number of records have zero value. we can see quite a few of the variables have missing values and contain zero value. The TEAM_BATTING_HBP variable can be dropped as it has 92% missing data.
+
+```{r}
+
+training %>% select(-INDEX) %>% plot_missing()
+
+training %>% select(-INDEX) %>% gather(variable, value) %>% filter(value == 0) %>% 
+  group_by(variable) %>% tally() %>% mutate(percent = n / nrow(training) * 100) %>%
+  mutate(percent = paste0(round(percent, ifelse(percent < 10, 1, 0)), "%")) %>%
+  arrange(desc(n)) %>% rename(`Variable With Zeros` = variable, 
+                              `Number of Records` = n,
+                              `Share of Total` = percent)
+
+```
+
+# Data Preparation
+
+We assume the missing data are Missing at Random and choose to impute. The reason we want to impute the missing data rather than replacing with mean or median because of large number of missing values. If we're replacing with mean or median on the large number of missing values, can result in loss of variation in data.
+
+We're imputing the missing data using the MICE package. The method of predictive mean matching (PMM) is selected for continuous variables. Before doing imputation, we drop the INDEX and TEAM_BATTING_HBP variables as these two variables are useless.INDEX as it gives us no valuable information, and TEAM_BATTING_HBP is missing too many values to gain any insight from it. 
+
+We are also going to drop the win value columns that do not seem to make any sense, as they will confuse the model and possibly cause it to predict win values that aren't possible within the history of baseball. 
+  
+```{r}
+
+# Drop the index and bat_hbp variable
+train_df <- training %>% select(-c(INDEX, TEAM_BATTING_HBP))  %>%  filter (TARGET_WINS> 30 & TARGET_WINS< 117 ) %>% arrange(TARGET_WINS)
+
+
+
+# Use the mice package to impute the missing values
+imputed_data <- mice(train_df, m=5, maxit=30, method='pmm', seed=321)
+
+# Select complete imputed data set number 2
+complete_train_data <- complete(imputed_data,2)
+
+
+
+```
+
+```{r}
+complete_train_data 
+```
+
+
+```{r}
+ training  %>% select(TARGET_WINS,TEAM_BATTING_H,TEAM_BATTING_2B,TEAM_BATTING_3B,TEAM_BATTING_HR,TEAM_BATTING_BB) %>% arrange(desc(TEAM_BATTING_H))
+```
+
+
+Before we step in to build models, we should check the sign of collinearity among the predictors by looking at the pairwise correlations. From the figure below, we can see there are several large pairwise correlations between predictors as highlighted in red or summarized as below. When building models, we can consider to pick one predictor over the other for each pair because one of them can represent the other. 
+
+- TEAM_PITCHING_SO : TEAM_BATTING_SO
+- TEAM_PITCHING_BB : TEAM_BATTING_BB
+- TEAM_PITCHING_HR : TEAM_BATTING_HR
+- TEAM_PITCHING_H : TEAM_BATTING_H
+
+```{r}
+
+plot_correlation(complete_train_data)
+
+```
+
+# Build Models
+
+```{r partition}
+
+set.seed(123)
+train_index <- createDataPartition(complete_train_data$TARGET_WINS, p = .7, list = FALSE, times = 1)
+additional_train <- complete_train_data[train_index,]
+additional_test <- complete_train_data[-train_index,]
+
+```
+
+```{r saturated model}
+
+# Saturated linear regression model
+r.squared <- c()
+sat_lm <- lm(TARGET_WINS ~ ., data = additional_train)
+summary(sat_lm)
+r.squared['full'] = summary(sat_lm)$adj.r.squared
+
+```
+
+We can use backward elimination method to eliminate variables do not contribute to the regression equation.
+
+From the summary, we can see these 4 variables: TEAM_BATTING_H, TEAM_BASERUN_CS, TEAM_PITCHING_HR, TEAM_PITCHING_SO which p-value are statistically insignificant. 
+
+```{r 1st model}
+
+# Test whether pitch_hr, picth_bb, brun_cs can be dropped
+lm <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+r.squared['lm'] = summary(lm)$adj.r.squared
+summary(lm)
+anova(lm, sat_lm)
+
+```
+
+All the 4 variables can be dropped as its p-value of F-test is 0.1214. The null hypothesis cannot be rejected.
+
+```{r permutation test}
+
+# Normal theory-based p-value
+lms <- summary(lm)
+format.pval(1 - pf(lms$fstatistic[1],lms$fstatistic[2],lms$fstatistic[3]))
+
+# Permutation test based p-value
+nreps <- 5000
+set.seed(123)
+fstats <- numeric(nreps)
+for(i in 1:nreps){
+  lmods <- lm(sample(TARGET_WINS) ~ ., data = subset(additional_train,select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+  fstats[i] <- summary(lmods)$fstat[1]
+}
+
+format.pval(mean(fstats > lms$fstat[1]))
+
+```
+
+We can see the permutation test result similar to the normal theory-based value of 2.22e-16. Also, the p-value is less than the significance level, we can reject the null hypothesis. This indicates the imputed training data set provides sufficient evidence to conclude the regression model fits the data better than the model with no predictor variables.
+
+Evaluate the first model through residuals plot and QQ plot and also Shapiro-Wilk normality test. We can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression and also the Shapiro-Wilk normality test is greater than 0.05 indicating normality of the data.
+
+```{r lm test}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm$fitted.values, lm$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm$residuals)
+qqline(lm$residuals)
+
+
+# Test for constant variance
+
+summary (lm (abs (lm$residuals) ~ lm$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
+
+shapiro.test(lm$residuals)
+
+
+```
+
+By referring to the collinear analysis done previously, we can drop one of these two variables (TEAM_BATTING_BB, TEAM_PITCHING_BB) as one of them can represent the other.  
+
+```{r 2nd model}
+
+lm2 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
+summary(lm2)
+r.squared['lm'] = summary(lm2)$adj.r.squared
+
+```
+
+```{r lm2 test}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm2$fitted.values, lm2$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm2$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm2$residuals)
+qqline(lm2$residuals)
+
+
+# Test for constant variance
+
+summary (lm (abs (lm2$residuals) ~ lm2$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
+
+shapiro.test(lm2$residuals)
+
+
+```
+
+Examining the correlations of all three models, we can see that model two seems to operate the most efficiently. To build a third and possibly more efficient model we can remove variables TEAM_BASERUN_SB, and TEAM_BATTING_3B  as their correlation to TARGET_WINS is nearly 0 allowing us to infer that the impact is negligible. From a real
+world perspective this makes sense as stolen bases and triples are rarer events with teams who can consistently put players on the bases through singles and doubles seemingly having a greater wins. We can substantiate this based on the prediction results of the three models.
+
+```{r correlation for final model}
+summary(sat_lm,corr=TRUE)$corr
+summary(lm,corr=TRUE)$corr
+summary(lm2,corr=TRUE)$corr
+```
+
+
+```{r 3rd model}
+
+lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
+summary(lm3)
+r.squared['lm'] = summary(lm3)$adj.r.squared
+
+```
+
+```{r lm3 test}
+
+par(mfrow=c(2,2))
+
+# Residuals plot
+plot(lm3$fitted.values, lm3$residuals, 
+     xlab='Fitted Values', ylab='Residuals')
+abline(h = 0, lty = 3, col="blue")
+abline(h = 40, lty = 3, col="red")
+abline(h = -40, lty = 3, col="red")
+
+# Histogram plot
+hist(lm3$residuals, xlab="Residuals")
+
+# QQ plot
+qqnorm(lm3$residuals)
+qqline(lm3$residuals)
+
+
+# Test for constant variance
+
+summary (lm (abs (lm3$residuals) ~ lm3$fitted.values))
+
+# Test Residuals for Normality
+# H0: Residuals are normally distributed, HA: Residuals are Not Normally Distributed
+# P-value >.05 so we fail to reject the null hypothesis in favor of the alternative indicating
+# Residuals are normally distributed
+
+shapiro.test(lm3$residuals)
+
+
+```
+
+Predict values based on 3 models
+
+```{r Prediction results}
+
+results_model_one = predict(lm,newdata = additional_test)
+results_model_two = predict(lm2,newdata = additional_test)
+results_model_three = predict(lm3,newdata = additional_test)
+
+results_df = data.frame(additional_test$TARGET_WINS,results_model_one,results_model_two,results_model_three)
+
+ggplot(results_df,aes(results_model_one,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+ggplot(results_df,aes(results_model_two,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+ggplot(results_df,aes(results_model_three,additional_test.TARGET_WINS)) + geom_point()+ geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+
+# Min-Max Accuracy Calculation
+#min_max_accuracy <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_mo#del_one), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_o#ne), 1, max))  
+
+
+# MAPE Calculation
+#mape <- mean(abs((actuals_preds$predicteds - #actuals_preds$actuals))/actuals_preds$actuals)  
+
+```
+
+Additional Evaluations
+
+```{r MarioEval1}
+additional_test$lm <- predict(lm, additional_test)
+additional_test <- additional_test %>% mutate(lm_error = TARGET_WINS - lm)
+ggplot(additional_test, aes(lm_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm_error^2)),2)),color="white")
+```
+
+```{r MarioEval2}
+additional_test$lm2 <- predict(lm2, additional_test)
+additional_test <- additional_test %>% mutate(lm2_error = TARGET_WINS - lm2)
+ggplot(additional_test, aes(lm2_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm2_error^2)),2)),color="white")
+```
+
+```{r MarioEval3}
+additional_test$lm3 <- predict(lm3, additional_test)
+additional_test <- additional_test %>% mutate(lm3_error = TARGET_WINS - lm3)
+ggplot(additional_test, aes(lm3_error)) +
+  geom_histogram(bins = 50, color = "black") + annotate("text",x=0,y=10, label = paste("RMSE = ", round(sqrt(mean(additional_test$lm3_error^2)),2)),color="white")
+```
+
+As we can see, the first model has the lowest RMSE, which means this model has fewer errors than the other two.
