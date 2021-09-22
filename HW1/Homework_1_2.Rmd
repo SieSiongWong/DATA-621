@@ -426,13 +426,23 @@ ggplot(results_df,aes(results_model_three,additional_test.TARGET_WINS)) + geom_p
   labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
 
 
+# Model 1 Results
+regr.eval(results_df$additional_test.TARGET_WINS, results_df$results_model_one)
+
+# Model 2 Results
+regr.eval(results_df$additional_test.TARGET_WINS, results_df$results_model_two)
+
+# Model 3 Results
+regr.eval(results_df$additional_test.TARGET_WINS, results_df$results_model_three)
+
 # Min-Max Accuracy Calculation
-#min_max_accuracy <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_mo#del_one), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_o#ne), 1, max))  
+min_max_accuracy_one <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_model_one), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_one), 1, max))  
 
+min_max_accuracy_two <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_model_two), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_two), 1, max))  
 
-# MAPE Calculation
-#mape <- mean(abs((actuals_preds$predicteds - #actuals_preds$actuals))/actuals_preds$actuals)  
+min_max_accuracy_three <- mean(apply(select(results_df,additional_test.TARGET_WINS,results_model_three), 1, min) / apply(select(results_df,additional_test.TARGET_WINS,results_model_three), 1, max))  
 
+print(c(paste0("Model 1 Accuracy:",min_max_accuracy_one," "),paste0("Model 2 Accuracy:",min_max_accuracy_two," "),paste0("Model 3 Accuracy:",min_max_accuracy_three," ")))
 ```
 
 Additional Evaluations
