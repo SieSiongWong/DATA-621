@@ -383,3 +383,17 @@ ggplot(additional_test, aes(lm3_error)) +
 ```
 
 As we can see, the first model has the lowest RMSE, which means this model has fewer errors than the other two.
+
+
+```{r predict eval}
+
+evaluation$TARGET_WINS <- predict(lm, evaluation)
+print(head(evaluation,10))
+
+describe(evaluation)
+
+evaluation %>% select(-INDEX) %>% plot_histogram()
+evaluation %>% select(-INDEX) %>% plot_density()
+evaluation %>% select(-INDEX) %>% plot_boxplot(by="TARGET_WINS")
+
+```
