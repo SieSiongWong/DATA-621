@@ -116,9 +116,7 @@ complete_train_data
 ```
 
 
-```{r}
- training  %>% select(TARGET_WINS,TEAM_BATTING_H,TEAM_BATTING_2B,TEAM_BATTING_3B,TEAM_BATTING_HR,TEAM_BATTING_BB) %>% arrange(desc(TEAM_BATTING_H))
-```
+
 
 
 Before we step in to build models, we should check the sign of collinearity among the predictors by looking at the pairwise correlations. From the figure below, we can see there are several large pairwise correlations between predictors as highlighted in red or summarized as below. When building models, we can consider to pick one predictor over the other for each pair because one of them can represent the other. 
