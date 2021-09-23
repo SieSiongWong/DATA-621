@@ -160,7 +160,7 @@ From the summary, we can see these 4 variables: TEAM_BATTING_2B , TEAM_BASERUN_C
 ```{r 1st model}
 
 # Test whether EAM_BATTING_2B , TEAM_BASERUN_CS, TEAM_PITCHING_HR, TEAM_PITCHING_BB can be dropped
-lm <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+lm <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB)))
 r.squared['lm'] = summary(lm)$adj.r.squared
 summary(lm)
 anova(lm, sat_lm)
@@ -180,7 +180,7 @@ nreps <- 5000
 set.seed(123)
 fstats <- numeric(nreps)
 for(i in 1:nreps){
-  lmods <- lm(sample(TARGET_WINS) ~ ., data = subset(additional_train,select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
+  lmods <- lm(sample(TARGET_WINS) ~ ., data = subset(additional_train,select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB)))
   fstats[i] <- summary(lmods)$fstat[1]
 }
 
