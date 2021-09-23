@@ -121,12 +121,10 @@ complete_train_data
 
 
 
-Before we step in to build models, we should check the sign of collinearity among the predictors by looking at the pairwise correlations. From the figure below, we can see there are several large pairwise correlations between predictors as highlighted in red or summarized as below. When building models, we can consider to pick one predictor over the other for each pair because one of them can represent the other. 
 
-- TEAM_PITCHING_SO : TEAM_BATTING_SO
-- TEAM_PITCHING_BB : TEAM_BATTING_BB
+Before we step in to build models, we should check the sign of collinearity among the predictors by looking at the pairwise correlations. From the figure below, we can see there is only a single pairwise correlations between predictors as highlighted in red or summarized as below. When building models, we can consider to pick one predictor over the other for each pair because one of them can represent the other. 
+
 - TEAM_PITCHING_HR : TEAM_BATTING_HR
-- TEAM_PITCHING_H : TEAM_BATTING_H
 
 ```{r}
 
