@@ -397,3 +397,9 @@ evaluation %>% select(-INDEX) %>% plot_density()
 evaluation %>% select(-INDEX) %>% plot_boxplot(by="TARGET_WINS")
 
 ```
+
+```{r export_eval_wins}
+
+write.csv(evaluation$TARGET_WINS,paste0(getwd(),"/Evaluation_Wins.csv"),row.names = FALSE)
+
+```
