@@ -157,11 +157,11 @@ r.squared['full'] = summary(sat_lm)$adj.r.squared
 
 We can use backward elimination method to eliminate variables do not contribute to the regression equation.
 
-From the summary, we can see these 4 variables: TEAM_BATTING_H, TEAM_BASERUN_CS, TEAM_PITCHING_HR, TEAM_PITCHING_SO which p-value are statistically insignificant. 
+From the summary, we can see these 4 variables: TEAM_BATTING_2B , TEAM_BASERUN_CS, TEAM_PITCHING_HR, TEAM_PITCHING_BB which p-value are statistically insignificant. Let's do some tests whether the null hypothesis of coefficient for all these 4 variables are equal to zero. 
 
 ```{r 1st model}
 
-# Test whether pitch_hr, picth_bb, brun_cs can be dropped
+# Test whether EAM_BATTING_2B , TEAM_BASERUN_CS, TEAM_PITCHING_HR, TEAM_PITCHING_BB can be dropped
 lm <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO)))
 r.squared['lm'] = summary(lm)$adj.r.squared
 summary(lm)
@@ -169,7 +169,7 @@ anova(lm, sat_lm)
 
 ```
 
-All the 4 variables can be dropped as its p-value of F-test is 0.1214. The null hypothesis cannot be rejected.
+We can see from the result of the test, the p-value of F-test is 0.1262 so null hypothesis cannot be rejected. We can also do permutation test which does not based on assumption of normality.
 
 ```{r permutation test}
 
@@ -190,7 +190,7 @@ format.pval(mean(fstats > lms$fstat[1]))
 
 ```
 
-We can see the permutation test result similar to the normal theory-based value of 2.22e-16. Also, the p-value is less than the significance level, we can reject the null hypothesis. This indicates the imputed training data set provides sufficient evidence to conclude the regression model fits the data better than the model with no predictor variables.
+We can see the permutation test result similar to the normal theory-based value of 2.22e-16. Now, we can confirm the 4 predictors don't have strong relation with the response variable. So, we can remove these predictors and build the first model.
 
 Evaluate the first model through residuals plot and QQ plot and also Shapiro-Wilk normality test. We can see this model meets the 3 conditions (linearity, nearly normal residuals, constant variability) of least squares regression and also the Shapiro-Wilk normality test is greater than 0.05 indicating normality of the data.
 
