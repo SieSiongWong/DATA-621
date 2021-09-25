@@ -280,7 +280,7 @@ summary(lm2,corr=TRUE)$corr
 
 ```{r 3rd model}
 
-lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB,TEAM_BATTING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
+lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB,TEAM_BATTING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B,TEAM_PITCHING_SO,TEAM_PITCHING_H)))
 summary(lm3)
 r.squared['lm'] = summary(lm3)$adj.r.squared
 
