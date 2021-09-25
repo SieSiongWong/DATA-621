@@ -225,11 +225,11 @@ shapiro.test(lm$residuals)
 
 ```
 
-By referring to the collinear analysis done previously, we can drop one of these two variables (TEAM_BATTING_BB, TEAM_PITCHING_BB) as one of them can represent the other.  
+By referring to the summary result from model 1, we can see that TEAM_BATTING_BB is the least strong relationship with response variable compared to the rest of predictors. We drop this predictor to build our second model.  
 
 ```{r 2nd model}
 
-lm2 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB)))
+lm2 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB,TEAM_BATTING_BB)))
 summary(lm2)
 r.squared['lm'] = summary(lm2)$adj.r.squared
 
@@ -280,7 +280,7 @@ summary(lm2,corr=TRUE)$corr
 
 ```{r 3rd model}
 
-lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_H,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_SO,TEAM_PITCHING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
+lm3 <- lm(TARGET_WINS ~ ., data = subset(additional_train, select=-c(TEAM_BATTING_2B,TEAM_BASERUN_CS,TEAM_PITCHING_HR,TEAM_PITCHING_BB,TEAM_BATTING_BB,TEAM_BASERUN_SB,TEAM_BATTING_3B)))
 summary(lm3)
 r.squared['lm'] = summary(lm3)$adj.r.squared
 
